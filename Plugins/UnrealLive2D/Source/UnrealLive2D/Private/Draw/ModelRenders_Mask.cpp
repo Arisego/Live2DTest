@@ -15,6 +15,8 @@
 //////////////////////////////////////////////////////////////////////////
 class FCubismMaskShader : public FGlobalShader
 {
+    DECLARE_INLINE_TYPE_LAYOUT(FCubismMaskShader, NonVirtual);;
+
 public:
     static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
     {
@@ -59,27 +61,14 @@ public:
         SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Bilinear, AM_Wrap, AM_Wrap, AM_Wrap>::GetRHI());
     }
 
-    virtual bool Serialize(FArchive& Ar) override
-    {
-        bool bShaderHasOutdatedParameters = FGlobalShader::Serialize(Ar);
-        Ar << TestFloat;
-        Ar << ProjectMatrix;
-        Ar << BaseColor;
-        Ar << ChannelFlag;
-
-        Ar << MainTexture;
-        Ar << MainTextureSampler;
-        return bShaderHasOutdatedParameters;
-    }
-
 private:
-    FShaderParameter TestFloat;
-    FShaderParameter ProjectMatrix;
-    FShaderParameter BaseColor;
-    FShaderParameter ChannelFlag;
-
-    FShaderResourceParameter MainTexture;
-    FShaderResourceParameter MainTextureSampler;
+    LAYOUT_FIELD(FShaderParameter, TestFloat);
+    LAYOUT_FIELD(FShaderParameter, ProjectMatrix);
+    LAYOUT_FIELD(FShaderParameter, BaseColor);
+    LAYOUT_FIELD(FShaderParameter, ChannelFlag);
+    
+    LAYOUT_FIELD(FShaderResourceParameter, MainTexture);
+    LAYOUT_FIELD(FShaderResourceParameter, MainTextureSampler);
 };
 
 class FCubismMaskVS : public FCubismMaskShader
@@ -161,7 +150,7 @@ void FModelRenders::RenderMask_Full(
             tf_MaskSize, tf_MaskSize, 1.f);
 
         // Get shaders.
-        TShaderMap<FGlobalShaderType>* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
+        FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
         TShaderMapRef< FCubismMaskVS > VertexShader(GlobalShaderMap);
         TShaderMapRef< FCubismMaskPS > PixelShader(GlobalShaderMap);
 
@@ -175,8 +164,8 @@ void FModelRenders::RenderMask_Full(
         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
-        GraphicsPSOInit.BoundShaderState.VertexShaderRHI = GETSAFERHISHADER_VERTEX(*VertexShader);
-        GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
+        GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
+        GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 
         //////////////////////////////////////////////////////////////////////////
         for (csmUint32 clipIndex = 0; clipIndex < _clippingManager->_clippingContextListForMask.GetSize(); clipIndex++)
@@ -252,14 +241,13 @@ void FModelRenders::RenderMask_Full(
 
                 FillMaskParameter(clipContext, _clippingManager, ts_MartixForMask, ts_BaseColor, ts_ChanelFlag);
 
-                VertexShader->SetParameters(RHICmdList, VertexShader->GetVertexShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
-                PixelShader->SetParameters(RHICmdList, PixelShader->GetPixelShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
+                VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
+                PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
                 SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
                 ////////////////////////////////////////////////////////////////////////////
 
                 RHICmdList.SetStreamSource(0, ScratchVertexBufferRHI, 0);
-                RHICmdList.DrawIndexedPrimitive(IndexBufferRHI, 0, 0, 4, 0, 2, 1);
 
                 RHICmdList.DrawIndexedPrimitive(
                     IndexBufferRHI,
@@ -315,7 +303,7 @@ void FModelRenders::RenderMask_Single(
             tf_MaskSize, tf_MaskSize, 1.f);
 
         // Get shaders.
-        TShaderMap<FGlobalShaderType>* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
+        FGlobalShaderMap* GlobalShaderMap = GetGlobalShaderMap(FeatureLevel);
         TShaderMapRef< FCubismMaskVS > VertexShader(GlobalShaderMap);
         TShaderMapRef< FCubismMaskPS > PixelShader(GlobalShaderMap);
 
@@ -329,8 +317,8 @@ void FModelRenders::RenderMask_Single(
         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
-        GraphicsPSOInit.BoundShaderState.VertexShaderRHI = GETSAFERHISHADER_VERTEX(*VertexShader);
-        GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
+        GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
+        GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 
         //////////////////////////////////////////////////////////////////////////
 
@@ -396,14 +384,13 @@ void FModelRenders::RenderMask_Single(
 
             FillMaskParameter(clipContext, _clippingManager, ts_MartixForMask, ts_BaseColor, ts_ChanelFlag);
 
-            VertexShader->SetParameters(RHICmdList, VertexShader->GetVertexShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
-            PixelShader->SetParameters(RHICmdList, PixelShader->GetPixelShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
+            VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
+            PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
             SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
             ////////////////////////////////////////////////////////////////////////////
 
             RHICmdList.SetStreamSource(0, ScratchVertexBufferRHI, 0);
-            RHICmdList.DrawIndexedPrimitive(IndexBufferRHI, 0, 0, 4, 0, 2, 1);
 
             RHICmdList.DrawIndexedPrimitive(
                 IndexBufferRHI,
