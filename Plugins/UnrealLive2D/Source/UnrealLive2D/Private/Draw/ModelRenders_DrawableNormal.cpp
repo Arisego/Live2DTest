@@ -53,7 +53,7 @@ public:
         SetShaderValue(RHICmdList, ShaderRHI, BaseColor, InBaseColor);
 
         SetTextureParameter(RHICmdList, ShaderRHI, InTexture, ShaderResourceTexture);
-        SetSamplerParameter(RHICmdList, ShaderRHI, InTextureSampler, TStaticSamplerState<SF_Bilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+        SetSamplerParameter(RHICmdList, ShaderRHI, InTextureSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
     }
 
 private:
@@ -158,7 +158,7 @@ void FModelRenders::DrawSepNormal(
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 
@@ -187,13 +187,12 @@ void FModelRenders::DrawSepNormal(
 
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
         GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
+        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
         VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_BaseColor, tsr_TextureRHI);
         PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_BaseColor, tsr_TextureRHI);
 
         //////////////////////////////////////////////////////////////////////////
-        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
-
 
         RHICmdList.SetStreamSource(0, ScratchVertexBufferRHI, 0);
 
@@ -237,7 +236,7 @@ void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRend
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 
@@ -251,6 +250,8 @@ void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRend
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
         GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 
+        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
+
         FVector4 ts_FakeBase = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
         VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
         PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
@@ -260,7 +261,6 @@ void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRend
         //FTextureRHIRef tsr_TextureRHI = tp_Texture->Resource->TextureRHI;
         //PixelShader->SetInTexture(RHICmdList, tsr_TextureRHI);
 
-        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
         RHICmdList.SetStreamSource(0, GCubismVertexScreenBuffer.VertexBufferRHI, 0);
         RHICmdList.DrawIndexedPrimitive(GTwoTrianglesIndexBuffer.IndexBufferRHI, 0, 0, 4, 0, 2, 1);

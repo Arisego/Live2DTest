@@ -64,8 +64,8 @@ public:
 
         SetTextureParameter(RHICmdList, ShaderRHI, MainTexture, MainTextureRef);
         SetTextureParameter(RHICmdList, ShaderRHI, MaskTexture, MaskTextureRef);
-        SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Bilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
-        SetSamplerParameter(RHICmdList, ShaderRHI, MaskSampler, TStaticSamplerState<SF_Bilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+        SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+        SetSamplerParameter(RHICmdList, ShaderRHI, MaskSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
     }
 
 private:
@@ -215,7 +215,7 @@ void FModelRenders::_DrawSepMask_Normal(
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 
@@ -265,6 +265,8 @@ void FModelRenders::_DrawSepMask_Normal(
             ts_ChanelFlag = FVector4(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
         }
 
+        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
+
         UE_LOG(LogCubism, Verbose, TEXT("_matrixForDraw: %s"), *ts_MartixForDraw.ToString());
         UE_LOG(LogCubism, Verbose, TEXT("_matrixForMask: %s"), *ConvertCubismMatrix(clipContext->_matrixForMask).ToString());
 
@@ -275,7 +277,6 @@ void FModelRenders::_DrawSepMask_Normal(
         PixelShader_Mask->SetParameters(RHICmdList, PixelShader_Mask.GetPixelShader(), ts_MartixForDraw, ts_MartixForDraw, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI, tsr_MaskTexture);
 
         //////////////////////////////////////////////////////////////////////////
-        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
 
         RHICmdList.SetStreamSource(0, ScratchVertexBufferRHI, 0);
@@ -344,7 +345,7 @@ void FModelRenders::_DrawSepMask_Normal(
          RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
          GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
          GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
          GraphicsPSOInit.PrimitiveType = PT_TriangleList;
          GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 
@@ -391,6 +392,8 @@ void FModelRenders::_DrawSepMask_Normal(
              ts_ChanelFlag = FVector4(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
          }
 
+         SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
+
          UE_LOG(LogCubism, Verbose, TEXT("_matrixForDraw: %s"), *ts_MartixForDraw.ToString());
          UE_LOG(LogCubism, Verbose, TEXT("_matrixForMask: %s"), *ConvertCubismMatrix(clipContext->_matrixForMask).ToString());
 
@@ -403,7 +406,6 @@ void FModelRenders::_DrawSepMask_Normal(
 
 
          //////////////////////////////////////////////////////////////////////////
-         SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
 
          RHICmdList.SetStreamSource(0, ScratchVertexBufferRHI, 0);

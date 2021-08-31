@@ -326,9 +326,9 @@ void FCubismSepRender::InitRender(TSharedPtr<class FRawModel> InModel, const FMo
 
     const csmInt32 bufferHeight = RenderStates._ClippingManager->GetClippingMaskBufferSize();
 
-    uint32 Flags = 0;
-    Flags |= TexCreate_RenderTargetable;
-    Flags |= TexCreate_ShaderResource;
+    ETextureCreateFlags Flags = ETextureCreateFlags(TexCreate_None| TexCreate_RenderTargetable| TexCreate_ShaderResource);
+    //Flags |= TexCreate_RenderTargetable;
+    //Flags |= TexCreate_ShaderResource;
     //Flags |= TexCreate_Dynamic;
     FRHIResourceCreateInfo CreateInfo;
     CreateInfo.ClearValueBinding = FClearValueBinding(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));

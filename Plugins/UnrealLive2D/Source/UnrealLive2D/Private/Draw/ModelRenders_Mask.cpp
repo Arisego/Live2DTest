@@ -58,7 +58,7 @@ public:
         SetShaderValue(RHICmdList, ShaderRHI, ChannelFlag, InChannelFlag);
 
         SetTextureParameter(RHICmdList, ShaderRHI, MainTexture, ShaderResourceTexture);
-        SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Bilinear, AM_Wrap, AM_Wrap, AM_Wrap>::GetRHI());
+        SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Trilinear, AM_Wrap, AM_Wrap, AM_Wrap>::GetRHI());
     }
 
 private:
@@ -161,7 +161,7 @@ void FModelRenders::RenderMask_Full(
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<CW_RGBA, BO_Add, BF_Zero, BF_InverseSourceColor, BO_Add, BF_Zero, BF_InverseSourceAlpha>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
@@ -234,6 +234,7 @@ void FModelRenders::RenderMask_Full(
                 FillVertexBuffer(tp_Model, clipDrawIndex, ScratchVertexBufferRHI, tp_States, RHICmdList);
 
                 ////////////////////////////////////////////////////////////////////////////
+                SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
                 FMatrix ts_MartixForMask;
                 FVector4 ts_BaseColor;
@@ -243,7 +244,6 @@ void FModelRenders::RenderMask_Full(
 
                 VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
                 PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_MartixForMask, ts_BaseColor, ts_ChanelFlag, tsr_TextureRHI);
-                SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
                 ////////////////////////////////////////////////////////////////////////////
 
@@ -314,7 +314,7 @@ void FModelRenders::RenderMask_Single(
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<CW_RGBA, BO_Add, BF_Zero, BF_InverseSourceColor, BO_Add, BF_Zero, BF_InverseSourceAlpha>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<>::GetRHI();
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
