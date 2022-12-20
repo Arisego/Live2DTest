@@ -45,7 +45,7 @@ public:
     void SetParameters(
         FRHICommandListImmediate& RHICmdList,
         const TShaderRHIParamRef ShaderRHI,
-        const FVector4& InBaseColor,
+        const FVector4f& InBaseColor,
         FTextureRHIRef ShaderResourceTexture
     )
     {
@@ -136,7 +136,7 @@ void FModelRenders::DrawSepNormal(
     check(indexCount > 0&& "Bad Index Count");
 
     FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
     FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store, OutTextureRenderTargetResource->TextureRHI);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparate"));
@@ -182,7 +182,7 @@ void FModelRenders::DrawSepNormal(
 
         //////////////////////////////////////////////////////////////////////////
         // TODO: ModelColor
-        FVector4 ts_BaseColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        FVector4f ts_BaseColor = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
         ts_BaseColor.W = tf_Opacity;
 
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
@@ -213,7 +213,7 @@ void FModelRenders::DrawSepNormal(
 void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRenderTargetResource, FRHICommandListImmediate& RHICmdList, ERHIFeatureLevel::Type FeatureLevel, struct FCubismRenderState* tp_States)
 {
     FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
     FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store, OutTextureRenderTargetResource->TextureRHI);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparateTest"));
@@ -252,7 +252,7 @@ void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRend
 
         SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
-        FVector4 ts_FakeBase = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        FVector4f ts_FakeBase = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
         VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
         PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
 

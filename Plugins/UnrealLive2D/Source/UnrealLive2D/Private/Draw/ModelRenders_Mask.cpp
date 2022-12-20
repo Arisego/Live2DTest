@@ -47,13 +47,30 @@ public:
         FRHICommandListImmediate& RHICmdList,
         const TShaderRHIParamRef ShaderRHI,
         const FMatrix& InProjectMatrix,
-        const FVector4& InBaseColor,
-        const FVector4& InChannelFlag,
+        const FVector4f& InBaseColor,
+        const FVector4f& InChannelFlag,
         FTextureRHIRef ShaderResourceTexture
     )
     {
+        FMatrix44f InProjectMatrixF; // FMatrix44f::Identity;
+        InProjectMatrixF.M[0][0] = InProjectMatrix.M[0][0];
+        InProjectMatrixF.M[0][1] = InProjectMatrix.M[0][1];
+        InProjectMatrixF.M[0][2] = InProjectMatrix.M[0][2];
+        InProjectMatrixF.M[0][3] = InProjectMatrix.M[0][3];
+        InProjectMatrixF.M[1][0] = InProjectMatrix.M[1][0];
+        InProjectMatrixF.M[1][1] = InProjectMatrix.M[1][1];
+        InProjectMatrixF.M[1][2] = InProjectMatrix.M[1][2];
+        InProjectMatrixF.M[1][3] = InProjectMatrix.M[1][3];
+        InProjectMatrixF.M[2][0] = InProjectMatrix.M[2][0];
+        InProjectMatrixF.M[2][1] = InProjectMatrix.M[2][1];
+        InProjectMatrixF.M[2][2] = InProjectMatrix.M[2][2];
+        InProjectMatrixF.M[2][3] = InProjectMatrix.M[2][3];
+        InProjectMatrixF.M[3][0] = InProjectMatrix.M[3][0];
+        InProjectMatrixF.M[3][1] = InProjectMatrix.M[3][1];
+        InProjectMatrixF.M[3][2] = InProjectMatrix.M[3][2];
+        InProjectMatrixF.M[3][3] = InProjectMatrix.M[3][3];
         SetShaderValue(RHICmdList, ShaderRHI, TestFloat, 1.0f);
-        SetShaderValue(RHICmdList, ShaderRHI, ProjectMatrix, InProjectMatrix);
+        SetShaderValue(RHICmdList, ShaderRHI, ProjectMatrix, InProjectMatrixF);
         SetShaderValue(RHICmdList, ShaderRHI, BaseColor, InBaseColor);
         SetShaderValue(RHICmdList, ShaderRHI, ChannelFlag, InChannelFlag);
 
@@ -112,7 +129,7 @@ IMPLEMENT_SHADER_TYPE(, FCubismMaskPS, TEXT("/Plugin/UnrealLive2D/Private/Cubism
 //////////////////////////////////////////////////////////////////////////
 
 
-void FillMaskParameter(CubismClippingContext* clipContext, CubismClippingManager_UE* _clippingManager, FMatrix& ts_MartixForMask, FVector4& ts_BaseColor, FVector4& ts_ChanelFlag)
+void FillMaskParameter(CubismClippingContext* clipContext, CubismClippingManager_UE* _clippingManager, FMatrix& ts_MartixForMask, FVector4f& ts_BaseColor, FVector4f& ts_ChanelFlag)
 {
     // チャンネル
     const csmInt32 channelNo = clipContext->_layoutChannelNo;
@@ -122,8 +139,8 @@ void FillMaskParameter(CubismClippingContext* clipContext, CubismClippingManager
     csmRectF* rect = clipContext->_layoutBounds;
 
     ts_MartixForMask = FModelRenders::ConvertCubismMatrix(clipContext->_matrixForMask);
-    ts_BaseColor = FVector4(rect->X * 2.0f - 1.0f, rect->Y * 2.0f - 1.0f, rect->GetRight() * 2.0f - 1.0f, rect->GetBottom() * 2.0f - 1.0f);
-    ts_ChanelFlag = FVector4(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
+    ts_BaseColor = FVector4f(rect->X * 2.0f - 1.0f, rect->Y * 2.0f - 1.0f, rect->GetRight() * 2.0f - 1.0f, rect->GetBottom() * 2.0f - 1.0f);
+    ts_ChanelFlag = FVector4f(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
 }
 
 void FModelRenders::RenderMask_Full(
@@ -137,7 +154,7 @@ void FModelRenders::RenderMask_Full(
     //////////////////////////////////////////////////////////////////////////
     FRHITexture2D* RenderTargetTexture = tp_States->MaskBuffer;
 
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
     FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store, RenderTargetTexture);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawMask01"));
@@ -154,7 +171,7 @@ void FModelRenders::RenderMask_Full(
         TShaderMapRef< FCubismMaskVS > VertexShader(GlobalShaderMap);
         TShaderMapRef< FCubismMaskPS > PixelShader(GlobalShaderMap);
 
-        //PixelShader->SetMaskParameter(RHICmdList, ts_Temp, FVector4(1, 1, 1, 1), FVector4(1, 1, 1, 1), nullptr);
+        //PixelShader->SetMaskParameter(RHICmdList, ts_Temp, FVector4f(1, 1, 1, 1), FVector4f(1, 1, 1, 1), nullptr);
 
         // Set the graphic pipeline state.
         FGraphicsPipelineStateInitializer GraphicsPSOInit;
@@ -237,8 +254,8 @@ void FModelRenders::RenderMask_Full(
                 SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
 
                 FMatrix ts_MartixForMask;
-                FVector4 ts_BaseColor;
-                FVector4 ts_ChanelFlag;
+                FVector4f ts_BaseColor;
+                FVector4f ts_ChanelFlag;
 
                 FillMaskParameter(clipContext, _clippingManager, ts_MartixForMask, ts_BaseColor, ts_ChanelFlag);
 
@@ -290,7 +307,7 @@ void FModelRenders::RenderMask_Single(
     //////////////////////////////////////////////////////////////////////////
     FRHITexture2D* RenderTargetTexture = tp_States->MaskBuffer;
 
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
     FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store, RenderTargetTexture);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawMask02"));
@@ -307,7 +324,7 @@ void FModelRenders::RenderMask_Single(
         TShaderMapRef< FCubismMaskVS > VertexShader(GlobalShaderMap);
         TShaderMapRef< FCubismMaskPS > PixelShader(GlobalShaderMap);
 
-        //PixelShader->SetMaskParameter(RHICmdList, ts_Temp, FVector4(1, 1, 1, 1), FVector4(1, 1, 1, 1), nullptr);
+        //PixelShader->SetMaskParameter(RHICmdList, ts_Temp, FVector4f(1, 1, 1, 1), FVector4f(1, 1, 1, 1), nullptr);
 
         // Set the graphic pipeline state.
         FGraphicsPipelineStateInitializer GraphicsPSOInit;
@@ -379,8 +396,8 @@ void FModelRenders::RenderMask_Single(
             ////////////////////////////////////////////////////////////////////////////
 
             FMatrix ts_MartixForMask;
-            FVector4 ts_BaseColor;
-            FVector4 ts_ChanelFlag;
+            FVector4f ts_BaseColor;
+            FVector4f ts_ChanelFlag;
 
             FillMaskParameter(clipContext, _clippingManager, ts_MartixForMask, ts_BaseColor, ts_ChanelFlag);
 

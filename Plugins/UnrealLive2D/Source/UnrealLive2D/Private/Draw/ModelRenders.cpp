@@ -125,7 +125,7 @@ FMatrix FModelRenders::ConvertCubismMatrix(Csm::CubismMatrix44& InCubismMartix)
 void FCubismVertexBuffer::InitRHI() 
 {
     // create a static vertex buffer
-    FRHIResourceCreateInfo CreateInfo;
+    FRHIResourceCreateInfo CreateInfo(TEXT("CreateInfo"));
     VertexBufferRHI = RHICreateVertexBuffer(sizeof(FCubismVertex) * 4, BUF_Static, CreateInfo);
     void* VoidPtr = RHILockVertexBuffer(VertexBufferRHI, 0, sizeof(FCubismVertex) * 4, RLM_WriteOnly);
     static const FCubismVertex Vertices[4] =
