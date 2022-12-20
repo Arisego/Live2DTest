@@ -50,15 +50,50 @@ public:
         const TShaderRHIParamRef ShaderRHI,
         const FMatrix& InProjectMatrix,
         const FMatrix& InClipMatrix,
-        const FVector4& InBaseColor,
-        const FVector4& InChannelFlag,
+        const FVector4f& InBaseColor,
+        const FVector4f& InChannelFlag,
         FTextureRHIRef MainTextureRef,
         FTextureRHIRef MaskTextureRef
     )
     {
+        //FMatrix44f InProjectMatrixF = InProjectMatrix * 1.0f;
+        FMatrix44f InProjectMatrixF; // FMatrix44f::Identity;
+        InProjectMatrixF.M[0][0] = InProjectMatrix.M[0][0];
+        InProjectMatrixF.M[0][1] = InProjectMatrix.M[0][1];
+        InProjectMatrixF.M[0][2] = InProjectMatrix.M[0][2];
+        InProjectMatrixF.M[0][3] = InProjectMatrix.M[0][3];
+        InProjectMatrixF.M[1][0] = InProjectMatrix.M[1][0];
+        InProjectMatrixF.M[1][1] = InProjectMatrix.M[1][1];
+        InProjectMatrixF.M[1][2] = InProjectMatrix.M[1][2];
+        InProjectMatrixF.M[1][3] = InProjectMatrix.M[1][3];
+        InProjectMatrixF.M[2][0] = InProjectMatrix.M[2][0];
+        InProjectMatrixF.M[2][1] = InProjectMatrix.M[2][1];
+        InProjectMatrixF.M[2][2] = InProjectMatrix.M[2][2];
+        InProjectMatrixF.M[2][3] = InProjectMatrix.M[2][3];
+        InProjectMatrixF.M[3][0] = InProjectMatrix.M[3][0];
+        InProjectMatrixF.M[3][1] = InProjectMatrix.M[3][1];
+        InProjectMatrixF.M[3][2] = InProjectMatrix.M[3][2];
+        InProjectMatrixF.M[3][3] = InProjectMatrix.M[3][3];
+        FMatrix44f InClipMatrixF;
+        InClipMatrixF.M[0][0] = InClipMatrix.M[0][0];
+        InClipMatrixF.M[0][1] = InClipMatrix.M[0][1];
+        InClipMatrixF.M[0][2] = InClipMatrix.M[0][2];
+        InClipMatrixF.M[0][3] = InClipMatrix.M[0][3];
+        InClipMatrixF.M[1][0] = InClipMatrix.M[1][0];
+        InClipMatrixF.M[1][1] = InClipMatrix.M[1][1];
+        InClipMatrixF.M[1][2] = InClipMatrix.M[1][2];
+        InClipMatrixF.M[1][3] = InClipMatrix.M[1][3];
+        InClipMatrixF.M[2][0] = InClipMatrix.M[2][0];
+        InClipMatrixF.M[2][1] = InClipMatrix.M[2][1];
+        InClipMatrixF.M[2][2] = InClipMatrix.M[2][2];
+        InClipMatrixF.M[2][3] = InClipMatrix.M[2][3];
+        InClipMatrixF.M[3][0] = InClipMatrix.M[3][0];
+        InClipMatrixF.M[3][1] = InClipMatrix.M[3][1];
+        InClipMatrixF.M[3][2] = InClipMatrix.M[3][2];
+        InClipMatrixF.M[3][3] = InClipMatrix.M[3][3];
         SetShaderValue(RHICmdList, ShaderRHI, TestFloat, 1.0f);
-        SetShaderValue(RHICmdList, ShaderRHI, ProjectMatrix, InProjectMatrix);
-        SetShaderValue(RHICmdList, ShaderRHI, ClipMatrix, InClipMatrix);
+        SetShaderValue(RHICmdList, ShaderRHI, ProjectMatrix, InProjectMatrixF);
+        SetShaderValue(RHICmdList, ShaderRHI, ClipMatrix, InClipMatrixF);
         SetShaderValue(RHICmdList, ShaderRHI, BaseColor, InBaseColor);
         SetShaderValue(RHICmdList, ShaderRHI, ChannelFlag, InChannelFlag);
 
@@ -193,7 +228,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
     //////////////////////////////////////////////////////////////////////////
     FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
     FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store, OutTextureRenderTargetResource->TextureRHI);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparate"));
@@ -240,7 +275,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
         //////////////////////////////////////////////////////////////////////////
         // TODO: ModelColor
-        FVector4 ts_BaseColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        FVector4f ts_BaseColor = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
         ts_BaseColor.W = tf_Opacity;
 
         /** TODO: If find some model use this */
@@ -251,7 +286,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
         static FMatrix ts_FakeGlobal = FMatrix::Identity;
         FMatrix ts_MartixForDraw;
-        FVector4 ts_ChanelFlag;
+        FVector4f ts_ChanelFlag;
 
         {
             // チャンネル
@@ -262,7 +297,7 @@ void FModelRenders::_DrawSepMask_Normal(
             csmRectF* rect = clipContext->_layoutBounds;
 
             ts_MartixForDraw = ConvertCubismMatrix(clipContext->_matrixForDraw);
-            ts_ChanelFlag = FVector4(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
+            ts_ChanelFlag = FVector4f(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
         }
 
         SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
@@ -323,7 +358,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
      //////////////////////////////////////////////////////////////////////////
      FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-     RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+     RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
      FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store, OutTextureRenderTargetResource->TextureRHI);
      RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparate"));
@@ -369,7 +404,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
          //////////////////////////////////////////////////////////////////////////
          // TODO: ModelColor
-         FVector4 ts_BaseColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+         FVector4f ts_BaseColor = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
          ts_BaseColor.W = tf_Opacity;
 
          GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader_Mask.GetVertexShader();
@@ -378,7 +413,7 @@ void FModelRenders::_DrawSepMask_Normal(
 
          static FMatrix ts_FakeGlobal = FMatrix::Identity;
          FMatrix ts_MartixForDraw;
-         FVector4 ts_ChanelFlag;
+         FVector4f ts_ChanelFlag;
 
          {
              // チャンネル
@@ -389,7 +424,7 @@ void FModelRenders::_DrawSepMask_Normal(
              csmRectF* rect = clipContext->_layoutBounds;
 
              ts_MartixForDraw = ConvertCubismMatrix(clipContext->_matrixForDraw);
-             ts_ChanelFlag = FVector4(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
+             ts_ChanelFlag = FVector4f(colorChannel->R, colorChannel->G, colorChannel->B, colorChannel->A);
          }
 
          SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);

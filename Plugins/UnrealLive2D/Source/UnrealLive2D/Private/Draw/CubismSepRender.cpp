@@ -2,7 +2,7 @@
 #include "RHICommandList.h"
 #include "TextureResource.h"
 #include "ProfilingDebugging/RealtimeGPUProfiler.h"
-#include "GeneratedCodeHelpers.h"
+//#include "GeneratedCodeHelpers.h"
 #include "RenderingThread.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
@@ -109,7 +109,7 @@ static void DrawSeparateToRenderTarget_RenderThread(
         //////////////////////////////////////////////////////////////////////////
         {
             FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-            RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+            RHICmdList.TransitionResource(ERHIAccess::WritableMask, RenderTargetTexture);
 
             FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store, OutTextureRenderTargetResource->TextureRHI);
             RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawClear"));
@@ -278,7 +278,7 @@ void FCubismSepRender::InitRender(TSharedPtr<class FRawModel> InModel, const FMo
                 const csmInt32 vcount = tp_Model->GetDrawableVertexCount(td_DrawIter);
                 if (0 != vcount)
                 {
-                    FRHIResourceCreateInfo CreateInfo_Vert;
+                    FRHIResourceCreateInfo CreateInfo_Vert(TEXT("CreateInfo_Vert"));
                     void* DrawableData = nullptr;
                     FVertexBufferRHIRef ScratchVertexBufferRHI = RHICreateAndLockVertexBuffer(vcount * sizeof(FCubismVertex), BUF_Dynamic, CreateInfo_Vert, DrawableData);
                     //FMemory::Memzero(DrawableData, vcount * sizeof(FCubismVertex));
@@ -296,7 +296,7 @@ void FCubismSepRender::InitRender(TSharedPtr<class FRawModel> InModel, const FMo
                 {
                     const csmUint16* indexArray = const_cast<csmUint16*>(tp_Model->GetDrawableVertexIndices(td_DrawIter));
 
-                    FRHIResourceCreateInfo CreateInfo_Indice;
+                    FRHIResourceCreateInfo CreateInfo_Indice(TEXT("CreateInfo_Indice"));
                     FIndexBufferRHIRef IndexBufferRHI = RHICreateIndexBuffer(sizeof(uint16), sizeof(uint16) * indexCount, BUF_Static, CreateInfo_Indice);
                     void* VoidPtr = RHILockIndexBuffer(IndexBufferRHI, 0, sizeof(uint16) * indexCount, RLM_WriteOnly);
                     FMemory::Memcpy(VoidPtr, indexArray, indexCount * sizeof(uint16));
@@ -330,7 +330,7 @@ void FCubismSepRender::InitRender(TSharedPtr<class FRawModel> InModel, const FMo
     //Flags |= TexCreate_RenderTargetable;
     //Flags |= TexCreate_ShaderResource;
     //Flags |= TexCreate_Dynamic;
-    FRHIResourceCreateInfo CreateInfo;
+    FRHIResourceCreateInfo CreateInfo(TEXT("CreateInfo"));
     CreateInfo.ClearValueBinding = FClearValueBinding(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
     RenderStates.MaskBuffer = RHICreateTexture2D(bufferHeight, bufferHeight, EPixelFormat::PF_B8G8R8A8, 1, 1, Flags, CreateInfo);
     //TransitionResource(FExclusiveDepthStencil DepthStencilMode, FRHITexture * DepthTexture)
