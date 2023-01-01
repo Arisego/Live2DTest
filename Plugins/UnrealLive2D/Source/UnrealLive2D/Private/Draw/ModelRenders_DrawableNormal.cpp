@@ -45,7 +45,7 @@ public:
     void SetParameters(
         FRHICommandListImmediate& RHICmdList,
         const TShaderRHIParamRef ShaderRHI,
-        const FVector4& InBaseColor,
+        const FVector4f& InBaseColor,
         FTextureRHIRef ShaderResourceTexture
     )
     {
@@ -136,9 +136,9 @@ void FModelRenders::DrawSepNormal(
     check(indexCount > 0&& "Bad Index Count");
 
     FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.Transition(MakeArrayView(FModelRenders::ConvertTransitionResource(FExclusiveDepthStencil::DepthWrite_StencilWrite, RenderTargetTexture)));
 
-    FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store, OutTextureRenderTargetResource->TextureRHI);
+    FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Load_Store);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparate"));
     {
         FIntPoint DisplacementMapResolution(OutTextureRenderTargetResource->GetSizeX(), OutTextureRenderTargetResource->GetSizeY());
@@ -174,20 +174,22 @@ void FModelRenders::DrawSepNormal(
 
         //////////////////////////////////////////////////////////////////////////
         /** Drawable draw */
-        FIndexBufferRHIRef IndexBufferRHI = tp_States->IndexBuffers.FindRef(drawableIndex);
-        FVertexBufferRHIRef ScratchVertexBufferRHI = tp_States->VertexBuffers.FindRef(drawableIndex);
-        FTextureRHIRef tsr_TextureRHI = tp_Texture->Resource->TextureRHI;
+        FBufferRHIRef IndexBufferRHI = tp_States->IndexBuffers.FindRef(drawableIndex);
+        FBufferRHIRef ScratchVertexBufferRHI = tp_States->VertexBuffers.FindRef(drawableIndex);
+
+        check(tp_Texture->GetResource());
+        FTextureRHIRef tsr_TextureRHI = tp_Texture->GetResource()->TextureRHI;
 
         FillVertexBuffer(tp_Model, drawableIndex, ScratchVertexBufferRHI, tp_States, RHICmdList);
 
         //////////////////////////////////////////////////////////////////////////
         // TODO: ModelColor
-        FVector4 ts_BaseColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        FVector4f ts_BaseColor = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
         ts_BaseColor.W = tf_Opacity;
 
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
         GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
-        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
+        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
 
         VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_BaseColor, tsr_TextureRHI);
         PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_BaseColor, tsr_TextureRHI);
@@ -213,9 +215,9 @@ void FModelRenders::DrawSepNormal(
 void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRenderTargetResource, FRHICommandListImmediate& RHICmdList, ERHIFeatureLevel::Type FeatureLevel, struct FCubismRenderState* tp_States)
 {
     FRHITexture2D* RenderTargetTexture = OutTextureRenderTargetResource->GetRenderTargetTexture();
-    RHICmdList.TransitionResource(ERHIAccess::EWritable, RenderTargetTexture);
+    RHICmdList.Transition(MakeArrayView(FModelRenders::ConvertTransitionResource(FExclusiveDepthStencil::DepthWrite_StencilWrite, RenderTargetTexture)));
 
-    FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store, OutTextureRenderTargetResource->TextureRHI);
+    FRHIRenderPassInfo RPInfo(RenderTargetTexture, ERenderTargetActions::Clear_Store);
     RHICmdList.BeginRenderPass(RPInfo, TEXT("DrawSeparateTest"));
     {
 
@@ -250,9 +252,9 @@ void FModelRenders::DrawTestTexture(FTextureRenderTargetResource* OutTextureRend
         GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
         GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 
-        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
+        SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit, 0);
 
-        FVector4 ts_FakeBase = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        FVector4f ts_FakeBase = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
         VertexShader->SetParameters(RHICmdList, VertexShader.GetVertexShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
         PixelShader->SetParameters(RHICmdList, PixelShader.GetPixelShader(), ts_FakeBase, tp_States->MaskBuffer->GetTexture2D());
 

@@ -40,7 +40,7 @@ void FModelRenders::SetUpBlendMode(
 void FModelRenders::FillVertexBuffer(
     Csm::CubismModel* tp_Model, 
     const Csm::csmInt32 drawableIndex, 
-    FVertexBufferRHIRef ScratchVertexBufferRHI, 
+    FBufferRHIRef ScratchVertexBufferRHI,
     FCubismRenderState* tp_States, 
     FRHICommandListImmediate& RHICmdList
 )
@@ -56,7 +56,7 @@ void FModelRenders::FillVertexBuffer(
         check(varray);
         check(uvarray);
 
-        void* DrawableData = RHICmdList.LockVertexBuffer(ScratchVertexBufferRHI, 0, td_NumVertext * sizeof(FCubismVertex), RLM_WriteOnly);
+        void* DrawableData = RHICmdList.LockBuffer(ScratchVertexBufferRHI, 0, td_NumVertext * sizeof(FCubismVertex), RLM_WriteOnly);
         FCubismVertex* RESTRICT DestSamples = (FCubismVertex*)DrawableData;
 
         for (int32 td_VertexIndex = 0; td_VertexIndex < td_NumVertext; ++td_VertexIndex)
@@ -67,7 +67,7 @@ void FModelRenders::FillVertexBuffer(
             DestSamples[td_VertexIndex].UV.Y = uvarray[td_VertexIndex * 2 + 1];
         }
 
-        RHICmdList.UnlockVertexBuffer(ScratchVertexBufferRHI);
+        RHICmdList.UnlockBuffer(ScratchVertexBufferRHI);
     }
 }
 
@@ -93,9 +93,9 @@ class UTexture2D* FModelRenders::GetTexture(
     return tp_Texture;
 }
 
-FMatrix FModelRenders::ConvertCubismMatrix(Csm::CubismMatrix44& InCubismMartix)
+FMatrix44f FModelRenders::ConvertCubismMatrix(Csm::CubismMatrix44& InCubismMartix)
 {
-    FMatrix ts_Mat;
+    FMatrix44f ts_Mat;
 
     ts_Mat.M[0][0] = InCubismMartix.GetArray()[0];
     ts_Mat.M[0][1] = InCubismMartix.GetArray()[1];
@@ -120,14 +120,12 @@ FMatrix FModelRenders::ConvertCubismMatrix(Csm::CubismMatrix44& InCubismMartix)
     return ts_Mat;
 }
 
-
-
 void FCubismVertexBuffer::InitRHI() 
 {
     // create a static vertex buffer
-    FRHIResourceCreateInfo CreateInfo;
+    FRHIResourceCreateInfo CreateInfo(TEXT("CubismVertexBuffer"));
     VertexBufferRHI = RHICreateVertexBuffer(sizeof(FCubismVertex) * 4, BUF_Static, CreateInfo);
-    void* VoidPtr = RHILockVertexBuffer(VertexBufferRHI, 0, sizeof(FCubismVertex) * 4, RLM_WriteOnly);
+    void* VoidPtr = RHILockBuffer(VertexBufferRHI, 0, sizeof(FCubismVertex) * 4, RLM_WriteOnly);
     static const FCubismVertex Vertices[4] =
     {
         FCubismVertex(-0.9,-0.9, 0, 0),
@@ -136,7 +134,7 @@ void FCubismVertexBuffer::InitRHI()
         FCubismVertex(+0.9,+0.9, 1, 1),
     };
     FMemory::Memcpy(VoidPtr, Vertices, sizeof(FCubismVertex) * 4);
-    RHIUnlockVertexBuffer(VertexBufferRHI);
+    RHIUnlockBuffer(VertexBufferRHI);
 }
 
 TGlobalResource<FCubismVertexBuffer> GCubismVertexScreenBuffer;
@@ -156,3 +154,23 @@ void FCubismVertexDeclaration::ReleaseRHI()
 }
 
 TGlobalResource<FCubismVertexDeclaration> GCubismVertexDeclaration;
+
+//////////////////////////////////////////////////////////////////////////
+TArray<FRHITransitionInfo, TInlineAllocator<2>> FModelRenders::ConvertTransitionResource(FExclusiveDepthStencil DepthStencilMode, FRHITexture* DepthTexture)
+{
+    check(DepthStencilMode.IsUsingDepth() || DepthStencilMode.IsUsingStencil());
+
+    TArray<FRHITransitionInfo, TInlineAllocator<2>> Infos;
+
+    DepthStencilMode.EnumerateSubresources([&](ERHIAccess NewAccess, uint32 PlaneSlice)
+        {
+            FRHITransitionInfo Info;
+            Info.Type = FRHITransitionInfo::EType::Texture;
+            Info.Texture = DepthTexture;
+            Info.AccessAfter = NewAccess;
+            Info.PlaneSlice = PlaneSlice;
+            Infos.Emplace(Info);
+        });
+
+    return Infos;
+}

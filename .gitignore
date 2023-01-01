@@ -79,6 +79,7 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 /Content/KiteDemo
+/Windows/
 
 # Cubism Library
 !/Plugins/UnrealLive2D/Source/ThirdParty/CubismLibrary/lib/*
