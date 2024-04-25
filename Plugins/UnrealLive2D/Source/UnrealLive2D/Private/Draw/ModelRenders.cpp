@@ -120,12 +120,12 @@ FMatrix44f FModelRenders::ConvertCubismMatrix(Csm::CubismMatrix44& InCubismMarti
     return ts_Mat;
 }
 
-void FCubismVertexBuffer::InitRHI() 
+void FCubismVertexBuffer::InitRHI(FRHICommandListBase& RHICmdList) 
 {
     // create a static vertex buffer
     FRHIResourceCreateInfo CreateInfo(TEXT("CubismVertexBuffer"));
-    VertexBufferRHI = RHICreateVertexBuffer(sizeof(FCubismVertex) * 4, BUF_Static, CreateInfo);
-    void* VoidPtr = RHILockBuffer(VertexBufferRHI, 0, sizeof(FCubismVertex) * 4, RLM_WriteOnly);
+    VertexBufferRHI = RHICmdList.CreateVertexBuffer(sizeof(FCubismVertex) * 4, BUF_Static, CreateInfo);
+    void* VoidPtr = RHICmdList.LockBuffer(VertexBufferRHI, 0, sizeof(FCubismVertex) * 4, RLM_WriteOnly);
     static const FCubismVertex Vertices[4] =
     {
         FCubismVertex(-0.9,-0.9, 0, 0),
@@ -134,12 +134,12 @@ void FCubismVertexBuffer::InitRHI()
         FCubismVertex(+0.9,+0.9, 1, 1),
     };
     FMemory::Memcpy(VoidPtr, Vertices, sizeof(FCubismVertex) * 4);
-    RHIUnlockBuffer(VertexBufferRHI);
+    RHICmdList.UnlockBuffer(VertexBufferRHI);
 }
 
 TGlobalResource<FCubismVertexBuffer> GCubismVertexScreenBuffer;
 
-void FCubismVertexDeclaration::InitRHI()
+void FCubismVertexDeclaration::InitRHI(FRHICommandListBase& RHICmdList)
 {
     FVertexDeclarationElementList Elements;
     uint32 Stride = sizeof(FCubismVertex);

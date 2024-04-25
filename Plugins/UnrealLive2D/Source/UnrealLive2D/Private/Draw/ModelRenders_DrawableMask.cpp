@@ -9,6 +9,7 @@
 
 #include "UnrealLive2D.h"
 #include "ShaderParameterUtils.h"
+#include "DataDrivenShaderPlatformInfo.h"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -56,16 +57,20 @@ public:
         FTextureRHIRef MaskTextureRef
     )
     {
-        SetShaderValue(RHICmdList, ShaderRHI, TestFloat, 1.0f);
-        SetShaderValue(RHICmdList, ShaderRHI, ProjectMatrix, InProjectMatrix);
-        SetShaderValue(RHICmdList, ShaderRHI, ClipMatrix, InClipMatrix);
-        SetShaderValue(RHICmdList, ShaderRHI, BaseColor, InBaseColor);
-        SetShaderValue(RHICmdList, ShaderRHI, ChannelFlag, InChannelFlag);
+        FRHIBatchedShaderParameters& BatchedParameters = RHICmdList.GetScratchShaderParameters();
+        SetShaderValue(BatchedParameters, TestFloat, 1.0f);
+        SetShaderValue(BatchedParameters, ProjectMatrix, InProjectMatrix);
+        SetShaderValue(BatchedParameters, ClipMatrix, InClipMatrix);
+        SetShaderValue(BatchedParameters, BaseColor, InBaseColor);
+        SetShaderValue(BatchedParameters, ChannelFlag, InChannelFlag);
 
-        SetTextureParameter(RHICmdList, ShaderRHI, MainTexture, MainTextureRef);
-        SetTextureParameter(RHICmdList, ShaderRHI, MaskTexture, MaskTextureRef);
-        SetSamplerParameter(RHICmdList, ShaderRHI, MainTextureSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
-        SetSamplerParameter(RHICmdList, ShaderRHI, MaskSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+        SetTextureParameter(BatchedParameters, MainTexture, MainTextureRef);
+        SetTextureParameter(BatchedParameters, MaskTexture, MaskTextureRef);
+
+        SetSamplerParameter(BatchedParameters, MainTextureSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+        SetSamplerParameter(BatchedParameters, MaskSampler, TStaticSamplerState<SF_Trilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+    
+        RHICmdList.SetBatchedShaderParameters(ShaderRHI, BatchedParameters);
     }
 
 private:
@@ -215,7 +220,8 @@ void FModelRenders::_DrawSepMask_Normal(
         RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
         GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
         GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
+
+        GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, ERasterizerDepthClipMode::DepthClip, true>::GetRHI();
         GraphicsPSOInit.PrimitiveType = PT_TriangleList;
         GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 
@@ -347,7 +353,7 @@ void FModelRenders::_DrawSepMask_Normal(
          RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
          GraphicsPSOInit.DepthStencilState = TStaticDepthStencilState<false, CF_Always>::GetRHI();
          GraphicsPSOInit.BlendState = TStaticBlendState<>::GetRHI();
-         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, true, true>::GetRHI();
+         GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None, ERasterizerDepthClipMode::DepthClip, true>::GetRHI();
          GraphicsPSOInit.PrimitiveType = PT_TriangleList;
          GraphicsPSOInit.BoundShaderState.VertexDeclarationRHI = GCubismVertexDeclaration.VertexDeclarationRHI;
 

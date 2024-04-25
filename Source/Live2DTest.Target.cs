@@ -7,8 +7,10 @@ public class Live2DTestTarget : TargetRules
 {
 	public Live2DTestTarget( TargetInfo Target) : base(Target)
 	{
-		Type = TargetType.Game;
+        Type = TargetType.Game;
+        DefaultBuildSettings = BuildSettingsVersion.V5;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 
-		ExtraModuleNames.AddRange( new string[] { "Live2DTest" } );
+        ExtraModuleNames.AddRange( new string[] { "Live2DTest" } );
 	}
 }
